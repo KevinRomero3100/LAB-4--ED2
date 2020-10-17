@@ -1,0 +1,91 @@
+{
+	"info": {
+		"_postman_id": "acbaf9f8-d05e-4f9a-8a6d-e097b8497bf3",
+		"name": "LAB 3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Step 1 - Compress file",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/José De León/Desktop/test.txt"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:65528/api/compress/prueba",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "65528",
+					"path": [
+						"api",
+						"compress",
+						"prueba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Step 2 - Decompress file",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/José De León/Desktop/LAB 3 - Huffman/LAB 3 - API/Data/compressions/prueba.huff"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:65528/api/decompress",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "65528",
+					"path": [
+						"api",
+						"decompress"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Step 3 - Query all compressions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:65528/api/compressions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "65528",
+					"path": [
+						"api",
+						"compressions"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
