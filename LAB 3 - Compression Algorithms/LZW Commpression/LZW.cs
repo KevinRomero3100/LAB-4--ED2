@@ -36,7 +36,7 @@ namespace LAB_3___Compressor.LZW_Commpression
             return (compressed_weight / original_weight);
         }
 
-      
+        #region Encode 
         public byte[] EncodeData(byte[] content)
         {
             count_chars = content.Length;
@@ -48,7 +48,7 @@ namespace LAB_3___Compressor.LZW_Commpression
 
                 if (!ContainsValue(cadenaByte, principalCodesData))
                 {
-                    principalCodesData.Add( getKey(0),cadenaByte);
+                    principalCodesData.Add( SetKey(0),cadenaByte);
                 }
             }
             cadenaByte = new List<byte>();
@@ -59,7 +59,7 @@ namespace LAB_3___Compressor.LZW_Commpression
                 cadenaByte.Add(item);
                 if (!ContainsValue(cadenaByte, principalCodesData) && !ContainsValue(cadenaByte, secondaryCodesData))
                 {
-                    secondaryCodesData.Add(getKey(1), cadenaByte);
+                    secondaryCodesData.Add(SetKey(1), cadenaByte);
                     FistCompression(cadenaByte);
                     cadenaByte = new List<byte>();
                     i--;
@@ -69,35 +69,34 @@ namespace LAB_3___Compressor.LZW_Commpression
                 firstCompresion.Add(KeyValue(cadenaByte, principalCodesData));
             else
             firstCompresion.Add(KeyValue(cadenaByte, secondaryCodesData));
+
             cadenaByte = new List<byte>();
-            //EncodeData(content, cadenaByte, 0);
 
             original_weight = content.Length;
             return SecondCompression();
         }  
-
-        void EncodeData(byte[] content, List<byte> cadenaByte, int posByte)
+        void FistCompression(List<byte> cadenaByte)
         {
-            var item = content[posByte];
-            cadenaByte.Add(item);
-            if (ContainsValue(cadenaByte, principalCodesData) || ContainsValue(cadenaByte, secondaryCodesData))
+            List<byte> lastCadenaByte = new List<byte>();
+            foreach (var item in cadenaByte)
             {
-                posByte = posByte + 1;
-                if (content.Length > posByte)
+                lastCadenaByte.Add(item);
+            }
+            if (lastCadenaByte.Count > 1)
+            {
+                lastCadenaByte.RemoveAt(lastCadenaByte.Count - 1);
+                if (ContainsValue(lastCadenaByte, principalCodesData))
                 {
-                    EncodeData(content, cadenaByte, posByte);
+                    int key = KeyValue(lastCadenaByte, principalCodesData);
+                    firstCompresion.Add(key);
+                }
+                else if (ContainsValue(lastCadenaByte, secondaryCodesData))
+                {
+                    int key = KeyValue(lastCadenaByte, secondaryCodesData);
+                    firstCompresion.Add(key);
                 }
             }
-            else
-            {
-                secondaryCodesData.Add(getKey(1), cadenaByte);
-                FistCompression(cadenaByte);
-                cadenaByte = new List<byte>();
-                EncodeData(content, cadenaByte, posByte);
-            }
-            return;
-        }
-
+        }// agraga valores ala lista de claves
         byte[] SecondCompression()
         {
             List<byte> finalCompression = new List<byte>();
@@ -140,11 +139,10 @@ namespace LAB_3___Compressor.LZW_Commpression
                     finalCompression.Add(by);
                 }
             }
-            //AddMetaData(finalCompression, binaryMax);
+            AddMetaData(finalCompression, binaryMax);
             compressed_weight = finalCompression.Count;
             return finalCompression.ToArray();
-        }
-
+        } // Comprime la lista de claves 
         void AddMetaData(List<byte> finalCompression, int longitudDeBits)
         {
             var keys = principalCodesData.Keys.ToList();
@@ -160,45 +158,21 @@ namespace LAB_3___Compressor.LZW_Commpression
                 finalCompression.Insert(0, Convert.ToByte(keys.Count));
                 finalCompression.Insert(0, Convert.ToByte(longitudDeBits));
             }
-        }
-        void FistCompression(List<byte> cadenaByte)
-        {
-            List<byte> lastCadenaByte = new List<byte>();
-            foreach (var item in cadenaByte)
-            {
-                lastCadenaByte.Add(item);
-            }
-            if (lastCadenaByte.Count > 1)
-            {
-                lastCadenaByte.RemoveAt(lastCadenaByte.Count - 1);
-                if (ContainsValue(lastCadenaByte, principalCodesData))
-                {
-                    int key = KeyValue(lastCadenaByte, principalCodesData);
-                    firstCompresion.Add(key);
-                }
-                else if (ContainsValue(lastCadenaByte, secondaryCodesData))
-                {
-                    int key = KeyValue(lastCadenaByte, secondaryCodesData);
-                    firstCompresion.Add(key);
-                }
-            }
-        }
-
+        }//Agrega la metadata al principio la compresion final
         int KeyValue(List<byte> cadena, Dictionary<int, List<byte>> dictionari)
         {
             var keys = dictionari.Keys.ToList();
             var values = dictionari.Values.ToList();
             for (int i = 0; i < values.Count; i++)
             {
-                if (ComparesList(values[i],(cadena)))
+                if (CompareList(values[i],(cadena)))
                 {
                     return keys[i];
                 }
             }
             return -1;
-        }
-
-        bool ComparesList(List<byte> cadena, List<byte> cadena2)
+        }//Obtiene la clave de un valor en el diccionario
+        bool CompareList(List<byte> cadena, List<byte> cadena2)
         {
             if (cadena.Count == cadena2.Count)
             {
@@ -212,16 +186,14 @@ namespace LAB_3___Compressor.LZW_Commpression
                 return false;
             }
             return true;
-        }
-
-        int getKey(int indicador)
+        } // compara las cadenas si son iguales
+        int SetKey(int indicador)
         {
             if (indicador == 1)
                 return principalCodesData.Count + secondaryCodesData.Count + 1;
             else if (indicador == 0 ) return principalCodesData.Count + 1;
             else throw new NotImplementedException();
-        }
-
+        } //Crea la clave para el diccionario, necesita saber para que diccionario va a generar la clave 
         bool ContainsValue(List<byte> cadenaByte, Dictionary<int, List<byte>> dictionary)
         {
             var keys = dictionary.Keys.ToList();
@@ -234,7 +206,7 @@ namespace LAB_3___Compressor.LZW_Commpression
                     for (int i = keys[0]; i <= dictionary.Count(); i++)
                     {
                         var item = dictionary[i];
-                        if (ComparesList(item,cadenaByte)) return true;
+                        if (CompareList(item,cadenaByte)) return true;
                     }
                 }
                 else
@@ -242,13 +214,13 @@ namespace LAB_3___Compressor.LZW_Commpression
                     for (int i = 0; i <= dictionary.Count() - 1; i++)
                     {
                         var item = dictionary[keys[i]];
-                        if (ComparesList(item,cadenaByte)) return true;
+                        if (CompareList(item,cadenaByte)) return true;
                     }
                 }
             }
             return false;
-        }
-
+        }//Verifica si el diccionario contiene la lista de bytes
+        #endregion
         public byte[] DecodeData(byte[] content)
         {
             throw new NotImplementedException();
