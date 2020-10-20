@@ -13,6 +13,8 @@ namespace LAB_3___Compressor.LZW_Commpression
 
         Dictionary<int, List<byte>> principalCodesData = new Dictionary<int, List<byte>>();
         Dictionary<int, List<byte>> secondaryCodesData = new Dictionary<int, List<byte>>();
+        List<string> DecodeDictionary = new List<string>();
+        List<List<byte>> Decode = new List<List<byte>>();
 
 
         int count_chars;
@@ -223,8 +225,143 @@ namespace LAB_3___Compressor.LZW_Commpression
         #endregion
         public byte[] DecodeData(byte[] content)
         {
-            throw new NotImplementedException();
+            int bits_lenght = content[0];
+            int table_lenght = content[1];
+
+
+            int count = 0;
+            int pivote = 0;
+            DecodeDictionary.Add(null);
+            //
+            Decode.Add(null);
+            //
+            while (count < table_lenght)
+            {
+                DecodeDictionary.Add(Convert.ToString((char)content[pivote + 2]));
+
+                //
+                List<byte> current_char = new List<byte> { content[pivote + 2] }; 
+                Decode.Add(current_char);
+                //
+                pivote++;
+                count++;
+            }
+
+            string text = "";
+            int start = table_lenght + 2;
+            while (start < content.Length)
+            {
+                int dec = (int)content[start];
+                string bin = Convert.ToInt32(Convert.ToString(dec, 2)).ToString("D8");
+
+                text += bin;
+                start++;
+            }
+
+            List<int> text_decoded = new List<int>();
+            string current_index = "";
+            for (int i = 0; i < text.Length; i++)
+            {
+                current_index += text[i];
+                if (current_index.Length % bits_lenght == 0)
+                {
+                    int dec = Convert.ToInt32(current_index, 2);
+                    if (dec == 0) break;
+                    text_decoded.Add(dec);
+                    current_index = "";
+                }
+            }
+
+            //string result = "";
+            List<byte> result2 = new List<byte>();
+
+            //string last_chain = "";
+            List<byte> last_chain2 = new List<byte>();
+
+            int test = 0;
+            try
+            {
+                for (int i = 0; i < text_decoded.Count; i++)
+                {
+                    ///
+                    //string current_chain = DecodeDictionary[text_decoded[i]];
+                    List<byte> current_chain2 = new List<byte>();
+                    CopyChain(current_chain2,Decode[text_decoded[i]]);
+
+                    //
+                   // result += current_chain;
+                    result2 = result2.Concat(current_chain2).ToList();
+                    ///
+
+
+                    // string complete_chain = last_chain + current_chain[0];
+                    byte temporal_byte = current_chain2[0];
+                    last_chain2.Add(temporal_byte);
+                    List<byte> complete_chain2 = last_chain2;
+
+                    if (test == 47)
+                    {
+                        
+                    }
+
+                    if (!ContainsChain(complete_chain2))
+                    {
+                       // DecodeDictionary.Add(complete_chain);
+                        Decode.Add(complete_chain2);
+                    } 
+                    //last_chain = current_chain;
+                    last_chain2 = current_chain2;
+                    test++;
+                }
+            }
+            catch (Exception)
+            {
+
+                int stop = test;
+            }
+
+
+            //List<byte> result_normalize = ConvertText(result);
+            //return result_normalize.ToArray();
+            return result2.ToArray();
         }
 
+        public bool ContainsChain(List<byte> chain)
+        {
+            for (int i = 1; i < Decode.Count; i++)
+            {
+                List<byte> current_chain = Decode[i];
+                if (CompareChain(current_chain, chain)) return true;
+            }
+            return false;
+        }
+
+        public bool CompareChain(List<byte> chain1, List<byte> chain2)
+        {
+            if (chain1.Count != chain2.Count) return false;
+            for (int i = 0; i < chain1.Count; i++)
+            {
+                if (chain1[i] != chain2[i]) return false;
+            }
+            return true;
+        }
+
+        public void CopyChain(List<byte> duplicate, List<byte> original)
+        {
+            for (int i = 0; i < original.Count; i++)
+            {
+                duplicate.Add(original[i]);
+            }
+        }
+
+        public List<byte> ConvertText(string result)
+        {
+            List<byte> result_normalize = new List<byte>();
+            for (int i = 0; i < result.Length; i++)
+            {
+                result_normalize.Add((byte)result[i]);
+            }
+            return result_normalize;
+        }
     }
 }
