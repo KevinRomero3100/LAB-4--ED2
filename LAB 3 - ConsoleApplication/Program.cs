@@ -27,11 +27,11 @@ namespace LAB_3___ConsoleApplication
             double reduction_percentage = lzw.ReductionPercentage();
             
 
-            //lzw = new LZW();
-            //byte[] descompression_result = lzw.DecodeData(compression_result);
-            //Console.WriteLine("\n\nTEXTO DESCOMPRIMIDO");
-            //Console.WriteLine(ConvertToChar(descompression_result));
-            
+            lzw = new LZW();
+            byte[] descompression_result = lzw.DecodeData(compression_result);
+            Console.WriteLine("\n\nTEXTO DESCOMPRIMIDO");
+            Console.WriteLine(ConvertToChar(descompression_result));
+
             Console.WriteLine("\n\n\t\tFACTOR DE COMPRESIÓN\t\tRAZÓN DE COMPRESIÓN\t\tPORCENTAJE DE REDUCCIÓN");
             Console.WriteLine("\t\t"+compression_factor +"\t\t"+ compression_ratio + "\t\t"+ reduction_percentage);
             
