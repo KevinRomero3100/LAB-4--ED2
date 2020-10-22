@@ -12,7 +12,7 @@ namespace LAB_3___ConsoleApplication
         {
 
 
-            Console.WriteLine("\t\t\t\t\t\t\t- LAB 4 -\n\nKevin Romero 1047519\nJosé De León 1072619");
+            Console.WriteLine("\t\t\t\t\t\t\t- LAB 3 -\n\nKevin Romero 1047519\nJosé De León 1072619");
             LZW lzw = new LZW();
 
             string original = "A Cuesta le cuesta subir la cuesta,\ny en medio de la cuesta va y se acuesta";
@@ -31,7 +31,7 @@ namespace LAB_3___ConsoleApplication
             byte[] descompression_result = lzw.DecodeData(compression_result);
             Console.WriteLine("\n\nTEXTO DESCOMPRIMIDO");
             Console.WriteLine(ConvertToChar(descompression_result));
-            
+
             Console.WriteLine("\n\n\t\tFACTOR DE COMPRESIÓN\t\tRAZÓN DE COMPRESIÓN\t\tPORCENTAJE DE REDUCCIÓN");
             Console.WriteLine("\t\t"+compression_factor +"\t\t"+ compression_ratio + "\t\t"+ reduction_percentage);
             

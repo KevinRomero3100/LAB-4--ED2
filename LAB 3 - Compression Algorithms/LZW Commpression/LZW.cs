@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Transactions;
 
 namespace LAB_3___Compressor.LZW_Commpression
 {
@@ -13,15 +17,13 @@ namespace LAB_3___Compressor.LZW_Commpression
 
         Dictionary<int, List<byte>> principalCodesData = new Dictionary<int, List<byte>>();
         Dictionary<int, List<byte>> secondaryCodesData = new Dictionary<int, List<byte>>();
-        List<string> DecodeDictionary = new List<string>();
-        List<List<byte>> Decode = new List<List<byte>>();
 
 
         int count_chars;
         double original_weight;
         double compressed_weight;
 
-        public List<int> firstCompresion = new List<int>();
+        public List<int> firstCompression = new List<int>();
 
         public double ReductionPercentage()
         {
@@ -68,9 +70,9 @@ namespace LAB_3___Compressor.LZW_Commpression
                 }
             }
             if (ContainsValue(cadenaByte,principalCodesData))
-                firstCompresion.Add(KeyValue(cadenaByte, principalCodesData));
+                firstCompression.Add(KeyValue(cadenaByte, principalCodesData));
             else
-            firstCompresion.Add(KeyValue(cadenaByte, secondaryCodesData));
+            firstCompression.Add(KeyValue(cadenaByte, secondaryCodesData));
 
             cadenaByte = new List<byte>();
 
@@ -90,12 +92,12 @@ namespace LAB_3___Compressor.LZW_Commpression
                 if (ContainsValue(lastCadenaByte, principalCodesData))
                 {
                     int key = KeyValue(lastCadenaByte, principalCodesData);
-                    firstCompresion.Add(key);
+                    firstCompression.Add(key);
                 }
                 else if (ContainsValue(lastCadenaByte, secondaryCodesData))
                 {
                     int key = KeyValue(lastCadenaByte, secondaryCodesData);
-                    firstCompresion.Add(key);
+                    firstCompression.Add(key);
                 }
             }
         }// agraga valores ala lista de claves
@@ -103,9 +105,9 @@ namespace LAB_3___Compressor.LZW_Commpression
         {
             List<byte> finalCompression = new List<byte>();
             string binaryCode = "";
-            var binaryMax = Convert.ToString(firstCompresion.Max(),2).Length;
+            var binaryMax = Convert.ToString(firstCompression.Max(),2).Length;
             int count = 0;
-            foreach (var item in firstCompresion)
+            foreach (var item in firstCompression)
             {
                 var newBinary = Convert.ToString(item, 2);
                 if ( newBinary.Length <= binaryMax)
@@ -208,7 +210,10 @@ namespace LAB_3___Compressor.LZW_Commpression
                     for (int i = keys[0]; i <= dictionary.Count(); i++)
                     {
                         var item = dictionary[i];
-                        if (CompareList(item,cadenaByte)) return true;
+                        if (CompareList(item, cadenaByte))
+                        {
+                            return true;
+                        }
                     }
                 }
                 else
@@ -223,145 +228,118 @@ namespace LAB_3___Compressor.LZW_Commpression
             return false;
         }//Verifica si el diccionario contiene la lista de bytes
         #endregion
-        public byte[] DecodeData(byte[] content)
+        public byte[] DecodeData(byte[] Content)
         {
-            int bits_lenght = content[0];
-            int table_lenght = content[1];
+            List<byte> content = Content.ToList();
+            List<byte> outContent = new List<byte>();
+            List<byte> nuevaCadena = new List<byte>();
 
+            var originalBinary = content[0];
+            content.RemoveAt(0);
 
+            var tableLongth = content[0];
+            content.RemoveAt(0);
+
+            for (int i = 0; i < tableLongth; i++)
+            {
+                List<byte> temp = new List<byte>();
+                temp.Add(content[0]);
+                principalCodesData.Add(SetKey(0), temp);
+                content.RemoveAt(0);
+            }
+
+            AddDescompression(content, originalBinary);
+
+            int keyOld = 0;
+            int keyNew = 0;
+
+            List<byte> cadenaSalida = new List<byte>();
+            byte newCaracter = 0;
+
+            keyOld = firstCompression[0];
+            cadenaSalida.AddRange(GetValueKey(keyOld, principalCodesData));
+            newCaracter = cadenaSalida[0];
+            outContent.AddRange(cadenaSalida);
+
+            for (int i = 1; i < firstCompression.Count; i++)
+            {
+                keyNew = firstCompression[i];
+                if (!principalCodesData.ContainsKey(keyNew))
+                {
+                    cadenaSalida.AddRange(GetValueKey(keyOld, principalCodesData));
+                    cadenaSalida.Add(newCaracter);
+                }
+                else
+                {
+                    cadenaSalida = GetValueKey(keyNew, principalCodesData);
+                }
+
+                outContent.AddRange(cadenaSalida);
+
+                nuevaCadena.AddRange(GetValueKey(keyOld, principalCodesData));
+                newCaracter = cadenaSalida[0];
+                nuevaCadena.Add(newCaracter);
+                principalCodesData.Add(SetKey(0), nuevaCadena);
+                keyOld = keyNew;
+
+                nuevaCadena = new List<byte>();
+                cadenaSalida = new List<byte>();
+            }
+
+            return outContent.ToArray();
+        }
+
+      
+        List<byte> GetValueKey(int key, Dictionary<int, List<byte>> dictionary)
+        {
+            List<byte> cadena = new List<byte>();
+
+            var keys = dictionary.Keys.ToList();
+            var values = dictionary.Values.ToList();
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (keys[i] == key)
+                {
+                    return values[i];
+                }
+            }
+            return cadena;
+        }
+
+        void AddDescompression(List<byte> content, int originalBinary)
+        {
+            string binaryCode = "";
             int count = 0;
-            int pivote = 0;
-            DecodeDictionary.Add(null);
-            //
-            Decode.Add(null);
-            //
-            while (count < table_lenght)
+            foreach (var item in content)
             {
-                DecodeDictionary.Add(Convert.ToString((char)content[pivote + 2]));
-
-                //
-                List<byte> current_char = new List<byte> { content[pivote + 2] }; 
-                Decode.Add(current_char);
-                //
-                pivote++;
-                count++;
-            }
-
-            string text = "";
-            int start = table_lenght + 2;
-            while (start < content.Length)
-            {
-                int dec = (int)content[start];
-                string bin = Convert.ToInt32(Convert.ToString(dec, 2)).ToString("D8");
-
-                text += bin;
-                start++;
-            }
-
-            List<int> text_decoded = new List<int>();
-            string current_index = "";
-            for (int i = 0; i < text.Length; i++)
-            {
-                current_index += text[i];
-                if (current_index.Length % bits_lenght == 0)
+                var newBinary = Convert.ToString(item, 2);
+                if (newBinary.Length <= 8)
                 {
-                    int dec = Convert.ToInt32(current_index, 2);
-                    if (dec == 0) break;
-                    text_decoded.Add(dec);
-                    current_index = "";
-                }
-            }
-
-            //string result = "";
-            List<byte> result2 = new List<byte>();
-
-            //string last_chain = "";
-            List<byte> last_chain2 = new List<byte>();
-
-            int test = 0;
-            try
-            {
-                for (int i = 0; i < text_decoded.Count; i++)
-                {
-                    ///
-                    //string current_chain = DecodeDictionary[text_decoded[i]];
-                    List<byte> current_chain2 = new List<byte>();
-                    CopyChain(current_chain2,Decode[text_decoded[i]]);
-
-                    //
-                   // result += current_chain;
-                    result2 = result2.Concat(current_chain2).ToList();
-                    ///
-
-
-                    // string complete_chain = last_chain + current_chain[0];
-                    byte temporal_byte = current_chain2[0];
-                    last_chain2.Add(temporal_byte);
-                    List<byte> complete_chain2 = last_chain2;
-
-                    if (test == 47)
+                    count++;
+                    //Balance de 0 faltantes para llagar al maximo re querido
+                    while (newBinary.Length != 8)
                     {
-                        
+                        newBinary = "0" + newBinary;
                     }
-
-                    if (!ContainsChain(complete_chain2))
-                    {
-                       // DecodeDictionary.Add(complete_chain);
-                        Decode.Add(complete_chain2);
-                    } 
-                    //last_chain = current_chain;
-                    last_chain2 = current_chain2;
-                    test++;
+                    binaryCode += newBinary;
                 }
             }
-            catch (Exception)
-            {
+            var splitSize = originalBinary;
 
-                int stop = test;
+            for (int i = 0; i < binaryCode.Length; i += splitSize)
+            {
+                if (i + splitSize > binaryCode.Length)
+                {
+                    return;
+                }
+                else
+                {
+                    var newInt = Convert.ToInt32(binaryCode.Substring(i, splitSize), 2);
+                    firstCompression.Add(newInt);
+                }
             }
 
-
-            //List<byte> result_normalize = ConvertText(result);
-            //return result_normalize.ToArray();
-            return result2.ToArray();
-        }
-
-        public bool ContainsChain(List<byte> chain)
-        {
-            for (int i = 1; i < Decode.Count; i++)
-            {
-                List<byte> current_chain = Decode[i];
-                if (CompareChain(current_chain, chain)) return true;
-            }
-            return false;
-        }
-
-        public bool CompareChain(List<byte> chain1, List<byte> chain2)
-        {
-            if (chain1.Count != chain2.Count) return false;
-            for (int i = 0; i < chain1.Count; i++)
-            {
-                if (chain1[i] != chain2[i]) return false;
-            }
-            return true;
-        }
-
-        public void CopyChain(List<byte> duplicate, List<byte> original)
-        {
-            for (int i = 0; i < original.Count; i++)
-            {
-                duplicate.Add(original[i]);
-            }
-        }
-
-        public List<byte> ConvertText(string result)
-        {
-            List<byte> result_normalize = new List<byte>();
-            for (int i = 0; i < result.Length; i++)
-            {
-                result_normalize.Add((byte)result[i]);
-            }
-            return result_normalize;
         }
     }
 }
