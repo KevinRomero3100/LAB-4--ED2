@@ -6,9 +6,9 @@
 
 ---
 
-### **Directorio de descompresiones**
+### **Directorio de compresiones**
 
-Directorio vacío donde se almacenan las descompresiones con el nombre del archivo orginal.
+Directorio vacío donde se almacenan las compresiones con el nombre específicado en la ruta.
 
 ---
 

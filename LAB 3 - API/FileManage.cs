@@ -73,14 +73,14 @@ namespace LAB_3___API
 
             for (int i = 1; File.Exists(CompressedFilePath) ; i++)
             {
-                var split = CompressedFileName.Split(".huff");
+                var split = CompressedFileName.Split(".lzw");
                 if (split[0].Contains("("))
                 {
                     var split2 = split[0].Split("(");
-                    CompressedFileName = split2[0] + "(" + i + ")" + ".huff";
+                    CompressedFileName = split2[0] + "(" + i + ")" + ".lzw";
                 }
                 else
-                CompressedFileName = split[0] + "(" + i + ")" + ".huff";
+                CompressedFileName = split[0] + "(" + i + ")" + ".lzw";
 
                 split = CompressedFilePath.Split("compressions");
                 CompressedFilePath = split[0] + "compressions\\" + CompressedFileName;

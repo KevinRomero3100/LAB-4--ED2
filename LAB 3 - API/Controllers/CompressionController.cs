@@ -35,8 +35,8 @@ namespace LAB_3___API.Controllers
             {
                 string file_path = environment.ContentRootPath + $"\\Data\\temporal\\{name}.txt";
                 string fileName = file.FileName;
-                string file_compressedpath = environment.ContentRootPath + $"\\Data\\compressions\\{name}.huff";
-                FileManage _file = new FileManage() { OriginalFileName = file.FileName, CompressedFileName = name + ".huff", CompressedFilePath = file_compressedpath, DateOfCompression = Convert.ToDateTime(DateTime.Now.ToShortTimeString()) };
+                string file_compressedpath = environment.ContentRootPath + $"\\Data\\compressions\\{name}.lzw";
+                FileManage _file = new FileManage() { OriginalFileName = file.FileName, CompressedFileName = name + ".lzw", CompressedFilePath = file_compressedpath, DateOfCompression = Convert.ToDateTime(DateTime.Now.ToShortTimeString()) };
 
                 //Save the file in the server
                 _file.SaveFile(file, file_path);
